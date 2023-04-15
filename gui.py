@@ -6,7 +6,7 @@ import ctypes
 # Getting screen resolution
 user32 = ctypes.windll.user32
 screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
-print(f"Screen Resolution (or the maximum resolution supported by the camera): {screensize[0]} x {screensize[1]}")
+print(f"Screen Resolution: {screensize[0]} x {screensize[1]}")
 
 # Setting capture resolution = screen resolution (is supported)
 vid = cv2.VideoCapture(0, cv2.CAP_DSHOW)
