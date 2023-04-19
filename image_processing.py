@@ -1,7 +1,19 @@
 import tkinter as tk
 import time
+import PIL, PIL.ImageTk
 import cv2
+import numpy as np
 import ctypes
+
+def padding(array, xx, yy):
+    
+    dif_height = xx - array.shape[1]
+    dif_width = yy - array.shape[0]
+    
+    array = np.pad(array, ((0, dif_width//2), (0, dif_height//2)), 'constant', constant_values=(0, 0))
+    array = np.pad(array, ((dif_width//2, 0), (dif_height//2, 0)), 'constant', constant_values=(0, 0))
+
+    return array
 
 # Getting screen resolution
 user32 = ctypes.windll.user32
@@ -34,18 +46,22 @@ window = tk.Tk()
 button = tk.Button(
     window,
     text="Flip Video",
-    padx=100,
     command=flip_video
-)
-button.pack()
+).grid(row=0, column=0)
 
+tk.Label(window, text="Upper Threshold").grid(row=1, column=0)
 slider = tk.Scale(from_=0, to=100, orient=tk.HORIZONTAL, command=change_thresh_1_val)
 slider.set(30)
-slider.pack()
+slider.grid(row=1, column=1)
+
+tk.Label(window, text="Lower Threshold").grid(row=2, column=0)
 slider2 = tk.Scale(from_=0, to=100, orient=tk.HORIZONTAL, command=change_thresh_2_val)
 slider2.set(60)
-slider2.pack()
-#window.mainloop()
+slider2.grid(row=2, column=1)
+
+ret, frame = vid.read()
+canvas = tk.Canvas(window, width = screensize[0] // 4, height = screensize[1] // 4)
+canvas.grid(row=3, column=0, columnspan=2)
 
 while 1:
     ret, frame = vid.read()
@@ -54,10 +70,15 @@ while 1:
     gray_filtered = cv2.bilateralFilter(gray, 10, 40, 40)
     edges_filtered = cv2.Canny(gray_filtered, thresh_1, thresh_2)
     
+    edges_filtered = padding(edges_filtered, screensize[0], screensize[1])
+    
     if flip is True:
         edges_filtered = cv2.flip(edges_filtered, 1)
     
     cv2.imshow('frame', edges_filtered)
+    preview = cv2.resize(edges_filtered, (screensize[0] // 4, screensize[1] // 4))
+    photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(preview))
+    canvas.create_image(0, 0, image = photo, anchor = tk.NW)
     
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
