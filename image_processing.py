@@ -41,6 +41,11 @@ def change_thresh_2_val(value):
     global thresh_2
     thresh_2 = int(value)
 
+scale = 1
+def change_scale_val(value):
+    global scale
+    scale = int(value)
+
 window = tk.Tk()
 
 button = tk.Button(
@@ -63,30 +68,39 @@ ret, frame = vid.read()
 canvas = tk.Canvas(window, width = screensize[0] // 4, height = screensize[1] // 4)
 canvas.grid(row=3, column=0, columnspan=2)
 
+black_frame = np.zeros((screensize[1], screensize[0]), dtype=np.uint8)
+
+n_frames = 0
+
 while 1:
-    ret, frame = vid.read()
     
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    gray_filtered = cv2.bilateralFilter(gray, 10, 40, 40)
-    edges_filtered = cv2.Canny(gray_filtered, thresh_1, thresh_2)
+    if n_frames == 0:
+        cv2.imshow('frame', black_frame)
     
-    edges_filtered = padding(edges_filtered, screensize[0], screensize[1])
+    else:
+        ret, frame = vid.read()
+        
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray_filtered = cv2.bilateralFilter(gray, 10, 40, 40)
+        edges_filtered = cv2.Canny(gray_filtered, thresh_1, thresh_2)
+        
+        edges_filtered = padding(edges_filtered, screensize[0], screensize[1])
+        
+        if flip is True:
+            edges_filtered = cv2.flip(edges_filtered, 1)
     
-    if flip is True:
-        edges_filtered = cv2.flip(edges_filtered, 1)
+        cv2.imshow('frame', edges_filtered)
+        preview = cv2.resize(edges_filtered, (screensize[0] // 4, screensize[1] // 4))
+        photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(preview))
+        canvas.create_image(0, 0, image = photo, anchor = tk.NW)
     
-    cv2.imshow('frame', edges_filtered)
-    preview = cv2.resize(edges_filtered, (screensize[0] // 4, screensize[1] // 4))
-    photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(preview))
-    canvas.create_image(0, 0, image = photo, anchor = tk.NW)
+    n_frames = (n_frames + 1) % 10
     
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
     
-    
     window.update_idletasks()
     window.update()
-    time.sleep(0.01)
     
 vid.release()
 cv2.destroyAllWindows()
