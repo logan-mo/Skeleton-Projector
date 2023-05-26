@@ -64,9 +64,14 @@ slider2 = tk.Scale(from_=0, to=100, orient=tk.HORIZONTAL, command=change_thresh_
 slider2.set(60)
 slider2.grid(row=2, column=1)
 
+tk.Label(window, text="Scale").grid(row=3, column=0)
+slider3 = tk.Scale(from_=1, to=10, orient=tk.HORIZONTAL, command=change_scale_val)
+slider3.set(10)
+slider3.grid(row=3, column=1)
+
 ret, frame = vid.read()
 canvas = tk.Canvas(window, width = screensize[0] // 4, height = screensize[1] // 4)
-canvas.grid(row=3, column=0, columnspan=2)
+canvas.grid(row=4, column=0, columnspan=2)
 
 black_frame = np.zeros((screensize[1], screensize[0]), dtype=np.uint8)
 
@@ -84,6 +89,7 @@ while 1:
         gray_filtered = cv2.bilateralFilter(gray, 10, 40, 40)
         edges_filtered = cv2.Canny(gray_filtered, thresh_1, thresh_2)
         
+        edges_filtered = cv2.resize(edges_filtered, (int(edges_filtered.shape[1] * (scale/10)), int(edges_filtered.shape[0] * (scale/10))))
         edges_filtered = padding(edges_filtered, screensize[0], screensize[1])
         
         if flip is True:
@@ -91,6 +97,7 @@ while 1:
     
         cv2.imshow('frame', edges_filtered)
         preview = cv2.resize(edges_filtered, (screensize[0] // 4, screensize[1] // 4))
+        
         photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(preview))
         canvas.create_image(0, 0, image = photo, anchor = tk.NW)
     
